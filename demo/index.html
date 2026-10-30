@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dither-moon</title>
+<meta name="description" content="The Moon at its real phase, drawn as 1-bit dithered pixel art.">
+<style>
+  :root {
+    --ground: #0f0f0e;
+    --bone: #e7e2d6;
+    --ash: #8f8a80;
+    --rule: #2e2d29;
+    --blue: #7390ff;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--bone);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 2.5rem max(16px, 4vw) 4rem;
+    display: grid;
+    gap: 3rem;
+  }
+  h1 { margin: 0; font: 700 clamp(2.5rem, 8vw, 4rem)/1 var(--mono); letter-spacing: -0.03em; }
+  h2 { margin: 0 0 1rem; font-size: 1.25rem; }
+  p { margin: 0; }
+  a { color: var(--bone); text-decoration-color: var(--blue); text-underline-offset: 0.2em; }
+  .muted { color: var(--ash); }
+  .hero { display: grid; gap: 2rem; align-items: center; }
+  @media (min-width: 44rem) { .hero { grid-template-columns: 1fr 1fr; } }
+  .hero dither-moon { max-width: 22rem; width: 100%; }
+  .readout { font: 1.25rem/1.4 var(--mono); }
+  .readout b { font-weight: 700; }
+  .row { display: grid; grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr)); gap: 0.75rem; }
+  .row figure { margin: 0; display: grid; gap: 0.4rem; }
+  .row figcaption { font-size: 0.875rem; color: var(--ash); }
+  .looks { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 1.25rem; }
+  .looks figure { margin: 0; display: grid; gap: 0.5rem; }
+  .looks figcaption { font: 0.875rem/1.4 var(--mono); color: var(--ash); }
+  pre {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    font: 0.875rem/1.5 var(--mono);
+    color: var(--bone);
+  }
+  .code { display: grid; gap: 1.25rem; }
+  .code h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+  footer { color: var(--ash); font-size: 0.875rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <dither-moon></dither-moon>
+    <div style="display: grid; gap: 1rem">
+      <h1>dither-moon</h1>
+      <p>The Moon at its real phase, right now, drawn as 1-bit dithered pixel art. A tag for any web page, a React component, and the phase math on its own.</p>
+      <p class="readout" id="readout">&nbsp;</p>
+      <p><a href="https://github.com/KanuSaru/dither-moon">Source on GitHub</a></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>This lunar cycle</h2>
+    <div class="row" id="cycle"></div>
+  </section>
+
+  <section>
+    <h2>Options</h2>
+    <div class="looks">
+      <figure><dither-moon surface="procedural" seed="7" drift="spin"></dither-moon><figcaption>surface="procedural" drift="spin"</figcaption></figure>
+      <figure><dither-moon hemisphere="south"></dither-moon><figcaption>hemisphere="south"</figcaption></figure>
+      <figure><dither-moon style="color: #7390ff" stars="0"></dither-moon><figcaption>style="color: …" stars="0"</figcaption></figure>
+      <figure><dither-moon pixel-size="5" drift="none"></dither-moon><figcaption>pixel-size="5" drift="none"</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="code">
+    <h2>Use it</h2>
+    <div>
+      <h3>Any web page</h3>
+      <pre><code>&lt;script src="https://cdn.jsdelivr.net/gh/KanuSaru/dither-moon@v1.0.0/dist/dither-moon.js"&gt;&lt;/script&gt;
+&lt;dither-moon style="width: 240px"&gt;&lt;/dither-moon&gt;</code></pre>
+    </div>
+    <div>
+      <h3>React</h3>
+      <pre><code>npm install github:KanuSaru/dither-moon#v1.0.0
+
+import { DitherMoon } from "dither-moon/react";
+&lt;DitherMoon style={{ width: 240, color: "#e7e2d6" }} /&gt;</code></pre>
+    </div>
+    <div>
+      <h3>Just the phase</h3>
+      <pre><code>import { moonPhase, nextFullMoon } from "dither-moon";
+moonPhase();      // { phaseName: "Waxing gibbous", illumination: 0.83, … }
+nextFullMoon();   // Date</code></pre>
+    </div>
+  </section>
+
+  <footer>
+    <p>Moon surface from NASA's Scientific Visualization Studio, CGI Moon Kit (public domain). Made by <a href="https://github.com/KanuSaru">Kanu</a>. MIT license.</p>
+  </footer>
+</main>
+
+<script src="../dist/dither-moon.js"></script>
+<script>
+  const { moonPhase, nextFullMoon, nextNewMoon, nextPhase } = window.DitherMoon;
+  const fmt = (d) => d.toLocaleDateString(undefined, { month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+  function readout() {
+    const p = moonPhase();
+    document.getElementById("readout").innerHTML =
+      `<b>${p.phaseName}</b><br>${Math.round(p.illumination * 100)}% lit<br>Next full moon: ${fmt(nextFullMoon())}`;
+  }
+  readout();
+  setInterval(readout, 60_000);
+
+  // the eight phases of the current cycle, each at its moment
+  const start = nextNewMoon(new Date(Date.now() - 29.6 * 86_400_000));
+  const row = document.getElementById("cycle");
+  for (let k = 0; k < 8; k++) {
+    const when = k === 0 ? start : nextPhase(k / 8, start);
+    const fig = document.createElement("figure");
+    const moon = document.createElement("dither-moon");
+    moon.setAttribute("date", when.toISOString());
+    moon.setAttribute("stars", "0");
+    moon.setAttribute("drift", "none");
+    const cap = document.createElement("figcaption");
+    cap.textContent = `${window.DitherMoon.PHASE_NAMES[k]}, ${when.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+    fig.append(moon, cap);
+    row.append(fig);
+  }
+</script>
+</body>
+</html>
