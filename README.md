@@ -11,7 +11,7 @@ The surface is NASA's map of the Moon, so the real seas and craters show up, and
 ## Any web page
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/KanuSaru/dither-moon@v1.0.0/dist/dither-moon.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dither-moon@1/dist/dither-moon.js"></script>
 
 <dither-moon style="width: 240px; color: #e7e2d6"></dither-moon>
 ```
@@ -21,7 +21,7 @@ Size it with CSS `width`; it stays square. The pixels take the element's CSS `co
 ## React
 
 ```bash
-npm install github:KanuSaru/dither-moon#v1.0.0
+npm install dither-moon
 ```
 
 ```jsx
