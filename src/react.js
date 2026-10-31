@@ -24,6 +24,8 @@ export function DitherMoon({
   hemisphere,
   motion,
   label,
+  interactive,
+  settle,
 }) {
   const box = useRef(null);
   const canvas = useRef(null);
@@ -32,7 +34,7 @@ export function DitherMoon({
   // a map object is passed through as is; names ("nasa", "procedural") are compared by value
   const surfaceObj = surface && typeof surface === "object" ? surface : null;
   const surfaceName = typeof surface === "string" ? surface : "nasa";
-  const opts = { color, pixelSize, drift, speed, stars, fps, seed, relief, hemisphere, motion, label };
+  const opts = { color, pixelSize, drift, speed, stars, fps, seed, relief, hemisphere, motion, label, interactive, settle };
   for (const k of Object.keys(opts)) if (opts[k] === undefined) delete opts[k];
   const optsKey = JSON.stringify(opts);
 

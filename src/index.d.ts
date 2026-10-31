@@ -63,6 +63,10 @@ export interface MoonOptions {
   motion?: "auto" | "always" | "never";
   /** Accessible description. Default: "<phase>, <n>% lit". */
   label?: string | null;
+  /** Drag (or use arrow keys) to turn the Moon and see the far side. Default true. */
+  interactive?: boolean;
+  /** Seconds after letting go before it eases back to the real view; 0 = stay where left. Default 6. */
+  settle?: number;
   /** Element whose width sets the size. Default: the canvas's parent. */
   container?: Element | null;
 }

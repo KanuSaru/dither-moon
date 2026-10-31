@@ -3,7 +3,7 @@
 //   <dither-moon style="width: 240px; color: #e7e2d6"></dither-moon>
 //
 // Attributes: date, color, pixel-size, surface, drift, speed, stars, fps,
-// seed, relief, hemisphere, motion, label. All optional.
+// seed, relief, hemisphere, motion, label, interactive, settle. All optional.
 
 import { createMoon } from "./render.js";
 
@@ -21,8 +21,10 @@ const ATTRS = {
   hemisphere: "hemisphere",
   motion: "motion",
   label: "label",
+  interactive: "interactive",
+  settle: "settle",
 };
-const NUMERIC = new Set(["speed", "stars", "fps", "seed", "relief"]);
+const NUMERIC = new Set(["speed", "stars", "fps", "seed", "relief", "settle"]);
 
 // Lets this file be imported during server rendering, where HTMLElement doesn't exist.
 const Base = typeof HTMLElement === "undefined" ? class {} : HTMLElement;
@@ -59,6 +61,7 @@ export class DitherMoonElement extends Base {
       if (v == null || v === "") continue;
       if (key === "pixelSize") o[key] = v === "auto" ? "auto" : Number(v);
       else if (NUMERIC.has(key)) o[key] = Number(v);
+      else if (key === "interactive") o[key] = v !== "false";
       else o[key] = v;
     }
     // removed attributes go back to their defaults

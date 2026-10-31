@@ -68,6 +68,8 @@ As attributes on the tag (`pixel-size="4"`), props in React (`pixelSize={4}`), o
 | `hemisphere` | `north` | `south` turns it the way it looks from the southern hemisphere. |
 | `motion` | `auto` | `auto` holds still for people who turn off motion. `always` or `never`. |
 | `label` | phase and % lit | Accessible description, e.g. a translation. |
+| `interactive` | `true` | Drag (or use arrow keys) to turn the Moon and see the far side. `false` to turn it off. |
+| `settle` | `6` | Seconds after letting go before it eases back to the side that faces Earth. `0` keeps it where you left it. |
 
 Animation pauses when the Moon is off screen or the tab is hidden.
 

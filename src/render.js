@@ -21,6 +21,8 @@ const DEFAULTS = {
   hemisphere: "north", // "south" shows the Moon the way it looks from the southern hemisphere
   motion: "auto", // "auto" respects prefers-reduced-motion; "always" | "never"
   label: null, // accessible description; null = "<phase>, <n>% lit"
+  interactive: true, // drag (or arrow keys) to turn the Moon and see the far side
+  settle: 6, // seconds after letting go before it eases back to the real view; 0 = stay where left
   container: null, // element whose width sets the size; default: the canvas's parent
 };
 
@@ -65,6 +67,11 @@ export function createMoon(canvas, options = {}) {
   let lastLabel = "";
   const start = typeof performance !== "undefined" ? performance.now() : Date.now();
   const out = [0, 0, 0];
+  // turning by hand, on top of the drift
+  let userYaw = 0, userPitch = 0, velYaw = 0, velPitch = 0;
+  let dragging = null;
+  let lastTouch = -Infinity;
+  let raf = 0;
 
   canvas.setAttribute("role", "img");
   canvas.style.display = "block";
@@ -120,6 +127,8 @@ export function createMoon(canvas, options = {}) {
       yaw = 7 * DEG * Math.sin(t * 0.21 * sp);
       pitch = 5 * DEG * Math.sin(t * 0.17 * sp + 1.1);
     }
+    yaw += userYaw;
+    pitch += userPitch;
     const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), spn = Math.sin(pitch);
     const flip = opts.hemisphere === "south" ? -1 : 1;
 
@@ -220,6 +229,97 @@ export function createMoon(canvas, options = {}) {
     draw();
   }
 
+  // ---- turning by hand ----
+  const nowMs = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+  const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+
+  function step() {
+    raf = 0;
+    if (destroyed) return;
+    const settleMs = Math.max(0, Number(opts.settle) || 0) * 1000;
+    let busy = !!dragging;
+    if (!dragging) {
+      userYaw += velYaw;
+      userPitch = Math.max(-1.4, Math.min(1.4, userPitch + velPitch));
+      velYaw *= 0.92;
+      velPitch *= 0.92;
+      if (Math.abs(velYaw) + Math.abs(velPitch) > 1e-4) busy = true;
+      else if (settleMs && nowMs() - lastTouch > settleMs && (userYaw || userPitch)) {
+        // ease back to the side that faces Earth
+        userYaw = wrapAngle(userYaw) * 0.9;
+        userPitch *= 0.9;
+        if (Math.abs(userYaw) + Math.abs(userPitch) < 1e-3) userYaw = userPitch = 0;
+        else busy = true;
+      } else if (settleMs && (userYaw || userPitch)) {
+        busy = true; // waiting to settle
+      }
+    }
+    draw();
+    if (busy) raf = requestAnimationFrame(step);
+  }
+  const kick = () => {
+    if (!raf && typeof requestAnimationFrame === "function") raf = requestAnimationFrame(step);
+  };
+
+  const turnBy = (dx, dy) => {
+    // a drag across the whole Moon turns it about half a turn
+    const flip = opts.hemisphere === "south" ? -1 : 1;
+    const k = Math.PI / Math.max(60, canvas.getBoundingClientRect().width * 0.8);
+    velYaw = -dx * k * flip;
+    velPitch = -dy * k * flip;
+    userYaw += velYaw;
+    userPitch = Math.max(-1.4, Math.min(1.4, userPitch + velPitch));
+    lastTouch = nowMs();
+    kick();
+  };
+  const onDown = (e) => {
+    if (!opts.interactive) return;
+    dragging = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    velYaw = velPitch = 0;
+    lastTouch = nowMs();
+    canvas.setPointerCapture?.(e.pointerId);
+    canvas.style.cursor = "grabbing";
+    kick();
+  };
+  const onMove = (e) => {
+    if (!dragging || e.pointerId !== dragging.id) return;
+    const dx = e.clientX - dragging.x, dy = e.clientY - dragging.y;
+    dragging.x = e.clientX;
+    dragging.y = e.clientY;
+    turnBy(dx, dy);
+  };
+  const onUp = (e) => {
+    if (!dragging || e.pointerId !== dragging.id) return;
+    dragging = null;
+    lastTouch = nowMs();
+    canvas.style.cursor = opts.interactive ? "grab" : "";
+    kick();
+  };
+  const onKey = (e) => {
+    if (!opts.interactive) return;
+    const d = { ArrowLeft: [-18, 0], ArrowRight: [18, 0], ArrowUp: [0, -18], ArrowDown: [0, 18] }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    turnBy(d[0], d[1]);
+  };
+  function applyInteractive() {
+    if (opts.interactive) {
+      canvas.style.cursor = "grab";
+      canvas.style.touchAction = "pan-y";
+      canvas.tabIndex = 0;
+    } else {
+      canvas.style.cursor = "";
+      canvas.style.touchAction = "";
+      canvas.removeAttribute("tabindex");
+    }
+  }
+  canvas.addEventListener("pointerdown", onDown);
+  canvas.addEventListener("pointermove", onMove);
+  canvas.addEventListener("pointerup", onUp);
+  canvas.addEventListener("pointercancel", onUp);
+  canvas.addEventListener("keydown", onKey);
+  applyInteractive();
+
   const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => setup() && draw()) : null;
   ro?.observe(box());
   const io =
@@ -250,6 +350,7 @@ export function createMoon(canvas, options = {}) {
       }
       setup();
       schedule();
+      applyInteractive();
       loadSurface();
       draw();
     },
@@ -260,6 +361,12 @@ export function createMoon(canvas, options = {}) {
     destroy() {
       destroyed = true;
       clearInterval(timer);
+      if (raf) cancelAnimationFrame(raf);
+      canvas.removeEventListener("pointerdown", onDown);
+      canvas.removeEventListener("pointermove", onMove);
+      canvas.removeEventListener("pointerup", onUp);
+      canvas.removeEventListener("pointercancel", onUp);
+      canvas.removeEventListener("keydown", onKey);
       ro?.disconnect();
       io?.disconnect();
       reduce?.removeEventListener?.("change", onMotionPref);
