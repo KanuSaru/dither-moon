@@ -85,6 +85,20 @@ function positions(T) {
   return { sunLon, sunKm, moonLon, moonLat, moonKm };
 }
 
+/**
+ * New, first quarter, full and last quarter are moments, so their names only
+ * apply within about a day of them; the four in-between names cover the rest.
+ */
+const MAIN_PHASE_WINDOW = 1 / SYNODIC_MONTH; // ±1 day, as a fraction of the cycle
+function phaseIndexOf(cycle) {
+  const near = (at) => Math.abs(((((cycle - at + 0.5) % 1) + 1) % 1) - 0.5) < MAIN_PHASE_WINDOW;
+  if (near(0)) return 0;
+  if (near(0.25)) return 2;
+  if (near(0.5)) return 4;
+  if (near(0.75)) return 6;
+  return cycle < 0.25 ? 1 : cycle < 0.5 ? 3 : cycle < 0.75 ? 5 : 7;
+}
+
 /** Where the Moon is in its cycle at a moment: 0 = new, 0.5 = full. */
 function cycleAt(ms) {
   const p = positions(centuries(ms));
@@ -103,7 +117,7 @@ export function moonPhase(date) {
   const psi = Math.acos(Math.min(1, Math.max(-1, cos(p.moonLat) * cos(separation))));
   const phaseAngle = Math.atan2(p.sunKm * Math.sin(psi), p.moonKm - p.sunKm * Math.cos(psi));
   const cycle = separation / 360;
-  const phaseIndex = Math.round(cycle * 8) % 8;
+  const phaseIndex = phaseIndexOf(cycle);
   return {
     date: d,
     /** 0 = new, 0.25 = first quarter, 0.5 = full, 0.75 = last quarter */

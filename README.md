@@ -18,6 +18,18 @@ The surface is NASA's map of the Moon, so the real seas and craters show up, and
 
 Size it with CSS `width`; it stays square. The pixels take the element's CSS `color`.
 
+Add `info` to show the phase, how much is lit and the next full moon under it:
+
+```html
+<dither-moon info style="width: 200px"></dither-moon>
+<!-- Waning gibbous · 73% lit · Full moon in 25 days -->
+
+<dither-moon info lang="es" style="width: 200px"></dither-moon>
+<!-- Gibosa menguante · 73% iluminada · Luna llena en 25 días -->
+```
+
+The caption uses the page's font and color. Without `lang` it follows the page's language (English or Spanish). Style it with `dither-moon::part(info) { … }`.
+
 ## React
 
 ```bash
@@ -27,7 +39,7 @@ npm install dither-moon
 ```jsx
 import { DitherMoon } from "dither-moon/react";
 
-<DitherMoon style={{ width: 240, color: "#e7e2d6" }} label="Today's moon" />
+<DitherMoon style={{ width: 240, color: "#e7e2d6" }} info lang="es" />
 ```
 
 ## Just the phase
@@ -45,6 +57,13 @@ moonPhase("2026-12-24"); // any date
 nextFullMoon();          // Date
 nextNewMoon();           // Date
 nextPhase(0.25);         // next first quarter (0 new, 0.25 first quarter, 0.5 full, 0.75 last quarter)
+```
+
+For a caption of your own, `moonInfo()` gives the same three lines as text:
+
+```js
+moonInfo(new Date(), "es");
+// { phase: "Gibosa menguante", lit: "73% iluminada", next: "Luna llena en 25 días" }
 ```
 
 `phaseIndex` runs 0–7 (new, waxing crescent, first quarter, waxing gibbous, full, waning gibbous, last quarter, waning crescent), handy for translating the name. `PHASE_NAMES` has the English ones.
@@ -69,6 +88,8 @@ As attributes on the tag (`pixel-size="4"`), props in React (`pixelSize={4}`), o
 | `motion` | `auto` | `auto` holds still for people who turn off motion. `always` or `never`. |
 | `label` | phase and % lit | Accessible description, e.g. a translation. |
 | `interactive` | `true` | Drag (or use arrow keys) to turn the Moon and see the far side. `false` to turn it off. |
+| `info` | off | Show the phase, % lit and next full moon under the image. |
+| `lang` | page language | Caption language: `en` or `es`. |
 | `settle` | `6` | Seconds after letting go before it eases back to the side that faces Earth. `0` keeps it where you left it. |
 
 Animation pauses when the Moon is off screen or the tab is hidden.

@@ -77,6 +77,10 @@ export interface MoonController {
   destroy(): void;
 }
 
+/** Short lines for a caption: phase name, % lit, next full moon. Languages: "en", "es". */
+export declare function moonInfo(date?: DateInput, lang?: string): { phase: string; lit: string; next: string };
+export declare const INFO_LANGUAGES: readonly string[];
+
 export declare function createMoon(canvas: HTMLCanvasElement, options?: MoonOptions): MoonController;
 
 export declare function mapSampler(

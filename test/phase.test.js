@@ -56,3 +56,22 @@ test("accepts strings and timestamps, rejects nonsense", () => {
   assert.equal(moonPhase("2025-03-14T06:55Z").phaseIndex, moonPhase(Date.parse("2025-03-14T06:55Z")).phaseIndex);
   assert.throws(() => moonPhase("not a date"), TypeError);
 });
+
+import { moonInfo } from "../src/info.js";
+
+test("caption lines in English and Spanish", () => {
+  const en = moonInfo("2025-03-14T06:55Z", "en");
+  assert.equal(en.phase, "Full moon");
+  assert.equal(en.next, "Full moon now");
+  const es = moonInfo("2025-03-10T00:00Z", "es-CO");
+  assert.equal(es.phase, "Gibosa creciente");
+  assert.match(es.lit, /% iluminada$/);
+  assert.match(es.next, /^Luna llena en \d+ días$/);
+});
+
+test("quarter names only near the quarter", () => {
+  const lq = nextPhase(0.75, "2026-01-01T00:00Z");
+  assert.equal(moonPhase(lq).phaseName, "Last quarter");
+  assert.equal(moonPhase(new Date(lq.getTime() - 2.5 * 86_400_000)).phaseName, "Waning gibbous");
+  assert.equal(moonPhase(new Date(lq.getTime() + 2.5 * 86_400_000)).phaseName, "Waning crescent");
+});

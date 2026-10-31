@@ -1,6 +1,6 @@
 {
   "name": "dither-moon",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "The Moon at its real phase, drawn as 1-bit dithered pixel art. A custom element, a React component and the phase math.",
   "type": "module",
   "main": "./src/index.js",
